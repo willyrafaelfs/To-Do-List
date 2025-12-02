@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Tugas - Manajemen Tugas Kuliah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ Edit Tugas</h1>
+        
+        <div class="task-preview">
+            <div class="preview-title">Mengedit Tugas:</div>
+            <strong>{{ task.judul }}</strong> - {{ task.matkul }} ({{ task.jenis_tugas }})
+        </div>
+        
+        <div class="task-form">
+            <form action="/edit/{{ task.id }}" method="post" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="matkul">Mata Kuliah:</label>
+                        <input type="text" id="matkul" name="matkul" value="{{ task.matkul }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jenis_tugas">Jenis Tugas:</label>
+                        <select id="jenis_tugas" name="jenis_tugas" required>
+                            <option value="">Pilih Jenis Tugas</option>
+                            {% for jenis in jenis_tugas %}
+                            <option value="{{ jenis }}" {% if task.jenis_tugas == jenis %}selected{% endif %}>{{ jenis }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row-time">
+                    <div class="time-input-group">
+                        <label for="deadline_date">Tanggal Deadline:</label>
+                        <input type="date" id="deadline_date" name="deadline_date" value="{{ deadline_date }}" min="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                    </div>
+                    
+                    <div class="time-input-group">
+                        <label for="deadline_time">Waktu Deadline:</label>
+                        <input type="time" id="deadline_time" name="deadline_time" value="{{ deadline_time }}">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="judul">Judul Tugas:</label>
+                    <input type="text" id="judul" name="judul" value="{{ task.judul }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="deskripsi">Deskripsi Detail:</label>
+                    <textarea id="deskripsi" name="deskripsi" placeholder="Deskripsi detail tentang tugas...">{{ task.deskripsi }}</textarea>
+                </div>
+                
+                <!-- File Attachments Section -->
+                <div class="form-group">
+                    <label for="attachments">Lampiran File:</label>
+                    <input type="file" id="attachments" name="attachments" multiple 
+                           accept=".pptx,.png,.jpg,.jpeg,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.zip,.rar">
+                    <small class="form-help">Tambah file baru (maksimal 16MB per file)</small>
+                    
+                    <!-- Existing Attachments -->
+                    {% if task.attachments %}
+                    <div class="attachments-list">
+                        <div style="font-weight: 500; margin-bottom: 8px; font-size: 14px;">File Terlampir:</div>
+                        <ul>
+                            {% for attachment in task.attachments %}
+                            <li>
+                                <span style="font-size: 18px;">{{ get_file_icon(attachment.filename) }}</span>
+                                <span style="flex-grow: 1; font-size: 14px;">{{ attachment.filename }}</span>
+                                <span style="font-size: 12px; color: #6c757d;">{{ attachment.uploaded_at }}</span>
+                                <a href="{{ url_for('download_file', filename=attachment.unique_filename) }}" 
+                                   style="color: var(--accent-primary); text-decoration: none; font-size: 14px;" 
+                                   download>⬇️</a>
+                                <a href="/delete_attachment/{{ task.id }}/{{ attachment.id }}" 
+                                   style="color: var(--accent-danger); text-decoration: none; font-size: 14px;"
+                                   onclick="return confirm('Hapus file ini?')">🗑️</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="button-group">
+                    <a href="/" class="btn-cancel">Batal</a>
+                    <button type="submit" class="btn-save">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Set minimum date untuk deadline (hari ini)
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('deadline_date').min = today;
+        
+        // Set default time to 23:59 if not set
+        const timeInput = document.getElementById('deadline_time');
+        if (!timeInput.value) {
+            timeInput.value = '23:59';
+        }
+    </script>
+</body>
+</html>

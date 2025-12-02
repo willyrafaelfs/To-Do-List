@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Tugas Kuliah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Manajemen Tugas Kuliah</h1>
+        
+        <div class="search-filter-section">
+            <h3>🔍 Cari & Filter Tugas</h3>
+            
+            <form method="GET" action="/">
+                <div class="search-box">
+                    <input type="text" name="search" placeholder="Cari berdasarkan mata kuliah, judul, deskripsi..."
+                           value="{{ search_query }}">
+                    <button type="submit">Cari</button>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Prioritas:</label>
+                        <select name="priority" onchange="this.form.submit()">
+                            <option value="">Semua</option>
+                            <option value="high" {% if filter_priority == 'high' %}selected{% endif %}>🔴 Tinggi</option>
+                            <option value="medium" {% if filter_priority == 'medium' %}selected{% endif %}>🟡 Sedang</option>
+                            <option value="low" {% if filter_priority == 'low' %}selected{% endif %}>🟢 Rendah</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Mata Kuliah:</label>
+                        <select name="matkul" onchange="this.form.submit()">
+                            <option value="">Semua</option>
+                            {% for matkul in unique_matkul %}
+                            <option value="{{ matkul }}" {% if filter_matkul == matkul %}selected{% endif %}>{{ matkul }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <a href="?show_completed={{ 'false' if show_completed else 'true' }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_priority %}&priority={{ filter_priority }}{% endif %}{% if filter_matkul %}&matkul={{ filter_matkul }}{% endif %}" 
+                           class="btn-toggle-completed">
+                            {% if show_completed %}🙈 Sembunyikan Selesai{% else %}👁️ Tampilkan Selesai ({{ completed_tasks_count }}){% endif %}
+                        </a>
+                    </div>
+                    
+                    {% if search_query or filter_priority or filter_matkul %}
+                    <a href="/" class="btn-clear">Hapus Filter</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        {% if search_query %}
+        <div class="search-results-info">
+            🔍 Menampilkan hasil pencarian untuk: <strong>"{{ search_query }}"</strong>
+            {% if filter_priority %}
+            | Filter prioritas: <strong>{{ get_priority_info(filter_priority)['label'] }}</strong>
+            {% endif %}
+            {% if filter_matkul %}
+            | Filter mata kuliah: <strong>{{ filter_matkul }}</strong>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <details class="add-task-collapsible">
+            <summary class="add-task-summary">
+                <span class="summary-title">➕ Tambah Tugas Baru</span>
+                <span class="summary-chevron">▼</span>
+            </summary>
+            <div class="task-form">
+                <form action="/add" method="post" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="matkul">Mata Kuliah:</label>
+                            <input type="text" id="matkul" name="matkul" placeholder="Contoh: Pemrograman Web" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="jenis_tugas">Jenis Tugas:</label>
+                            <select id="jenis_tugas" name="jenis_tugas" required>
+                                <option value="">Pilih Jenis Tugas</option>
+                                {% for jenis in jenis_tugas %}
+                                <option value="{{ jenis }}">{{ jenis }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-time">
+                        <div class="time-input-group">
+                            <label for="deadline_date">Tanggal Deadline:</label>
+                            <input type="date" id="deadline_date" name="deadline_date" min="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                        </div>
+                        
+                        <div class="time-input-group">
+                            <label for="deadline_time">Waktu Deadline:</label>
+                            <input type="time" id="deadline_time" name="deadline_time" value="23:59">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="judul">Judul Tugas:</label>
+                        <input type="text" id="judul" name="judul" placeholder="Contoh: Implementasi CRUD dengan Flask" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deskripsi">Deskripsi Detail:</label>
+                        <textarea id="deskripsi" name="deskripsi" placeholder="Deskripsi detail tentang tugas, langkah-langkah, requirements, etc..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="attachments">Lampiran File (Opsional):</label>
+                        <input type="file" id="attachments" name="attachments" multiple 
+                               accept=".pptx,.png,.jpg,.jpeg,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.zip,.rar">
+                        <small class="form-help">Maksimal 16MB per file. Format: gambar, PDF, dokumen, zip</small>
+                    </div>
+                    
+                    <button type="submit">Tambah Tugas</button>
+                </form>
+            </div>
+        </details>
+        
+        <div class="section-header">
+            <div class="section-title">🎯 Tugas Aktif</div>
+            <div class="task-count">{{ active_tasks_count }} tugas</div>
+        </div>
+        
+        {% if active_tasks_by_matkul %}
+            {% for matkul, matkul_tasks in active_tasks_by_matkul.items() %}
+            
+            <div class="section-header matkul-header-in-section">
+                <div class="section-title matkul-title-in-section">{{ matkul }}</div>
+                {% set completed_count = matkul_tasks|selectattr('selesai')|list|length %}
+                {% set total_count = matkul_tasks|length %}
+                <span class="matkul-progress-badge">
+                    {{ completed_count }}/{{ total_count }} selesai
+                </span>
+            </div>
+            
+            <ul class="task-list">
+            {% for task in matkul_tasks %}
+                <li class="task-item">
+                    <div class="task-info">
+                        <div class="judul-tugas">{{ task.judul }}</div>
+                        
+                        <div class="task-header">
+                            <span class="jenis-tugas">{{ task.jenis_tugas }}</span>
+                            {% set priority_info = get_priority_info(task.priority) %}
+                            <span class="priority-badge" style="--badge-color: {{ priority_info.color }};">
+                                {{ priority_info.label }}
+                            </span>
+                            <span style="color: var(--accent-danger); font-weight: 600; font-size: 12px;">⏳ BELUM SELESAI</span>
+                        </div>
+                        
+                        {% if task.deskripsi %}
+                        <div class="deskripsi">{{ task.deskripsi }}</div>
+                        {% endif %}
+                        
+                        <!-- File Attachments -->
+                        {% if task.attachments %}
+                        <div class="attachments-container">
+                            <div style="font-weight: 500; font-size: 14px; margin-bottom: 6px; color: var(--text-secondary);">
+                                📎 Lampiran:
+                            </div>
+                            <div class="attachment-preview">
+                                {% for attachment in task.attachments %}
+                                <a href="{{ url_for('download_file', filename=attachment.unique_filename) }}" 
+                                   class="preview-item"
+                                   download>
+                                    <span>{{ attachment.icon }}</span>
+                                    {{ attachment.filename|truncate(20) }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="deadline-display">
+                            {% if task.deadline %}
+                                {% set deadline_datetime = task.deadline.split('T') %}
+                                <div class="deadline-full">📅 Deadline: {{ deadline_datetime[0] }} {{ deadline_datetime[1] }}</div>
+                            {% endif %}
+                            
+                            {% if task.remaining_days is not none %}
+                                {% set remaining_info = get_remaining_days_info(task.remaining_days) %}
+                                <span class="remaining-time-badge" style="--badge-color: {{ remaining_info.color }};">
+                                    {{ remaining_info.label }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if task.deadline and task.remaining_days is not none and task.remaining_days >= 0 %}
+                        <div class="urgency-indicator">
+                            {% set urgency_width = [100 - (task.remaining_days / 30 * 100), 100]|min %}
+                            {% set urgency_width = [urgency_width, 5]|max %}
+                            {% set priority_info = get_priority_info(task.priority) %}
+                            <div class="urgency-fill" style="width: {{ urgency_width }}%; --badge-color: {{ priority_info.color }};"></div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="task-meta">
+                            <span class="created-time">📝 Dibuat: {{ task.created_at }}</span>
+                            {% if task.updated_at %}
+                            <span class="updated-time">✏️ Diupdate: {{ task.updated_at }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="task-actions">
+                        <a href="/edit/{{ task.id }}">
+                            <button class="btn-edit">Edit</button>
+                        </a>
+                        <a href="/complete/{{ task.id }}">
+                            <button class="btn-complete">Selesai</button>
+                        </a>
+                        <a href="/delete/{{ task.id }}">
+                            <button class="btn-delete">Hapus</button>
+                        </a>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>{% if search_query %}Tidak ditemukan tugas aktif yang sesuai dengan pencarian.{% else %}🎉 Tidak ada tugas aktif. Yuk tambah tugas baru!{% endif %}</p>
+            </div>
+        {% endif %}
+        
+        {% if show_completed and completed_tasks_by_matkul %}
+        <div class="completed-section">
+            <div class="section-header">
+                <div class="section-title">✅ Tugas Selesai</div>
+                <div class="task-count">{{ completed_tasks_count }} tugas</div>
+            </div>
+            
+            {% for matkul, matkul_tasks in completed_tasks_by_matkul.items() %}
+            <div class="section-header matkul-header-in-section">
+                <div class="section-title matkul-title-in-section">{{ matkul }}</div>
+                <span class="matkul-progress-badge">
+                    {{ matkul_tasks|length }} tugas selesai
+                </span>
+            </div>
+            
+            <ul class="task-list">
+            {% for task in matkul_tasks %}
+                <li class="task-item completed">
+                    <div class="task-info">
+                        <div class="judul-tugas">{{ task.judul }}</div>
+                        
+                        <div class="task-header">
+                            <span class="jenis-tugas">{{ task.jenis_tugas }}</span>
+                            <span style="color: var(--accent-success); font-weight: 600; font-size: 12px;">✅ SELESAI</span>
+                        </div>
+                        
+                        {% if task.deskripsi %}
+                        <div class="deskripsi">{{ task.deskripsi }}</div>
+                        {% endif %}
+                        
+                        <!-- File Attachments for completed tasks -->
+                        {% if task.attachments %}
+                        <div class="attachments-container">
+                            <div style="font-weight: 500; font-size: 14px; margin-bottom: 6px; color: var(--text-secondary);">
+                                📎 Lampiran:
+                            </div>
+                            <div class="attachment-preview">
+                                {% for attachment in task.attachments %}
+                                <a href="{{ url_for('download_file', filename=attachment.unique_filename) }}" 
+                                   class="preview-item"
+                                   download>
+                                    <span>{{ attachment.icon }}</span>
+                                    {{ attachment.filename|truncate(20) }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if task.deadline %}
+                            {% set deadline_datetime = task.deadline.split('T') %}
+                            <div class="deadline">📅 Deadline: {{ deadline_datetime[0] }} {{ deadline_datetime[1] }}</div>
+                        {% endif %}
+                        
+                        {% if task.completed_at %}
+                        <div class="completed-time">🎉 Diselesaikan: {{ task.completed_at }}</div>
+                        {% endif %}
+                        
+                        <div class="task-meta">
+                            <span class="created-time">📝 Dibuat: {{ task.created_at }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="task-actions">
+                        <a href="/uncomplete/{{ task.id }}">
+                            <button class="btn-uncomplete">Batal Selesai</button>
+                        </a>
+                        <a href="/delete/{{ task.id }}">
+                            <button class="btn-delete">Hapus</button>
+                        </a>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+            {% endfor %}
+        </div>
+        {% elif show_completed and completed_tasks_count == 0 %}
+        <div class="completed-section">
+            <div class="section-header">
+                <div class="section-title">✅ Tugas Selesai</div>
+                <div class="task-count">0 tugas</div>
+            </div>
+            <div class="empty-state">
+                <p>Belum ada tugas yang selesai.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Set minimum date untuk deadline (hari ini)
+        const today = new Date().toISOString().split('T')[0];
+        const deadlineDateInput = document.getElementById('deadline_date');
+        if (deadlineDateInput) {
+            deadlineDateInput.min = today;
+        }
+        
+        // Set default time to 23:59 if not set
+        const timeInput = document.getElementById('deadline_time');
+        if (timeInput && !timeInput.value) {
+            timeInput.value = '23:59';
+        }
+        
+        // Auto-submit form ketika filter berubah
+        document.querySelectorAll('select[name="priority"], select[name="matkul"]').forEach(select => {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+        
+        // Auto-refresh setiap 30 menit untuk update sisa waktu
+        setTimeout(function() {
+            window.location.reload();
+        }, 30 * 60 * 1000); // 30 menit
+    </script>
+</body>
+</html>
