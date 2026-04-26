@@ -10,23 +10,41 @@ import {
   ArrowRight
 } from "lucide-react";
 import Link from "next/link";
-
-const stats = [
-  { label: "Tugas Selesai", value: "12", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-  { label: "Sedang Berjalan", value: "5", icon: Clock, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-  { label: "Mendekati Deadline", value: "2", icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
-  { label: "IPK Prediksi", value: "3.85", icon: TrendingUp, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-900/20" },
-];
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const [statsData, setStatsData] = useState<any>(null);
+  const [recentTasks, setRecentTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then(res => res.json())
+      .then(data => setStatsData(data));
+
+    fetch("/api/tasks?status=todo")
+      .then(res => res.json())
+      .then(data => setRecentTasks(data.slice(0, 3)));
+  }, []);
+
+  const stats = [
+    { label: "Total Tugas", value: statsData?.totalTasks || 0, icon: TrendingUp, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-900/20" },
+    { label: "Tugas Selesai", value: statsData?.completedTasks || 0, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+    { label: "Pending", value: statsData?.pendingTasks || 0, icon: Clock, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
+    { label: "Mendekati Deadline", value: statsData?.upcomingDeadline ? 1 : 0, icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
+  ];
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Selamat Datang, Willy! 👋</h2>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Selamat Datang, {session?.user?.name || "Mahasiswa"}! 👋</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Ini ringkasan tugas kuliahmu hari ini.</p>
         </div>
-        <Link href="/tasks/new" className="flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-all shadow-lg shadow-primary-200 dark:shadow-none">
+        <Link href="/tasks/create" className="flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-all shadow-lg shadow-primary-200 dark:shadow-none font-bold">
           <Plus size={20} className="mr-2" />
           Tugas Baru
         </Link>
@@ -62,22 +80,29 @@ export default function DashboardPage() {
           </div>
           
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 glass rounded-2xl flex items-center justify-between card-hover border-l-4 border-primary-500">
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-white">Tugas {i}: Implementasi Next.js</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Pemrograman Web • Deadline: 2 Hari lagi</p>
+            {recentTasks.length === 0 ? (
+              <p className="text-slate-500 py-10 text-center glass rounded-2xl">Tidak ada tugas mendesak. Kerja bagus!</p>
+            ) : (
+              recentTasks.map((task) => (
+                <div key={task.id} className="p-4 glass rounded-2xl flex items-center justify-between card-hover border-l-4 border-primary-500">
+                  <div>
+                    <h4 className="font-bold text-slate-800 dark:text-white">{task.title}</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      {task.course.name} • Deadline: {formatDate(task.deadline)}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={cn(
+                      "px-3 py-1 text-xs font-bold rounded-full capitalize",
+                      task.priority === "high" ? "bg-red-100 text-red-700" : 
+                      task.priority === "medium" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                    )}>
+                      {task.priority}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold rounded-full">
-                    Medium
-                  </span>
-                  <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                    <CheckCircle2 size={20} className="text-slate-300 hover:text-emerald-500" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

@@ -14,41 +14,36 @@ model User {
   password  String
   courses   Course[]
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Course {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   lecturer  String?
   semester  Int?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks     Task[]
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Task {
   id          String     @id @default(cuid())
-  courseId    String
-  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title       String
   description String?
   deadline    DateTime?
   priority    String     @default("low") // low, medium, high
   status      String     @default("todo") // todo, progress, done
+  courseId    String
+  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
   reminders   Reminder[]
   createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
 }
 
 model Reminder {
   id        String   @id @default(cuid())
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   remindAt  DateTime
   isSent    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }

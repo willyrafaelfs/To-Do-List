@@ -1,20 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LogIn, Mail, Lock, ArrowRight } from "lucide-react";
+import { UserPlus, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const registered = searchParams.get("registered");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,17 +20,17 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (res?.error) {
-        setError("Email atau password salah");
+      if (res.ok) {
+        router.push("/login?registered=true");
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        const data = await res.json();
+        setError(data.message || "Gagal mendaftar");
       }
     } catch (err) {
       setError("Terjadi kesalahan koneksi");
@@ -48,25 +46,18 @@ export default function LoginPage() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md glass p-8 rounded-3xl shadow-2xl relative overflow-hidden"
       >
-        {/* Background blobs */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
 
         <div className="relative z-10">
           <div className="flex justify-center mb-8">
             <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-200 dark:shadow-none">
-              <LogIn className="text-white" size={32} />
+              <UserPlus className="text-white" size={32} />
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold text-center text-slate-800 dark:text-white mb-2">Selamat Datang</h2>
-          <p className="text-center text-slate-500 dark:text-slate-400 mb-8">Masuk untuk mengelola tugas kuliahmu</p>
-
-          {registered && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl text-sm mb-6 font-medium border border-emerald-100 dark:border-emerald-900/30">
-              Registrasi berhasil! Silakan masuk.
-            </div>
-          )}
+          <h2 className="text-3xl font-bold text-center text-slate-800 dark:text-white mb-2">Daftar Akun</h2>
+          <p className="text-center text-slate-500 dark:text-slate-400 mb-8">Mulai kelola tugas kuliahmu sekarang</p>
 
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm mb-6 font-medium border border-red-100 dark:border-red-900/30">
@@ -75,6 +66,21 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Nama Lengkap</label>
+              <div className="relative">
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nama Anda"
+                  required
+                  className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email</label>
               <div className="relative">
@@ -109,16 +115,16 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary-200 dark:shadow-none flex items-center justify-center group mt-4 disabled:opacity-50"
             >
-              {loading ? "Masuk..." : "Masuk Sekarang"}
+              {loading ? "Mendaftar..." : "Daftar Sekarang"}
               {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />}
             </button>
           </form>
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
             <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Belum punya akun?{" "}
-              <Link href="/register" className="text-primary-600 font-bold hover:underline">
-                Daftar Gratis
+              Sudah punya akun?{" "}
+              <Link href="/login" className="text-primary-600 font-bold hover:underline">
+                Masuk di sini
               </Link>
             </p>
           </div>

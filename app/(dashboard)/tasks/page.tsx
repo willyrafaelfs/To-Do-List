@@ -8,16 +8,14 @@ import {
   MoreVertical, 
   Calendar as CalendarIcon,
   CheckCircle2,
-  Circle
+  Circle,
+  Trash2,
+  Edit2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn, formatDate } from "@/lib/utils";
-
-const mockTasks = [
-  { id: "1", title: "Laporan Praktikum Jaringan", course: "Jaringan Komputer", deadline: "2024-04-28", priority: "high", status: "todo" },
-  { id: "2", title: "Project Akhir Next.js", course: "Pemrograman Web", deadline: "2024-05-01", priority: "medium", status: "progress" },
-  { id: "3", title: "Essay Etika Profesi", course: "Etika Profesi", deadline: "2024-05-05", priority: "low", status: "done" },
-];
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const priorityColors: any = {
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
@@ -26,7 +24,57 @@ const priorityColors: any = {
 };
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState<any[]>([]);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tasks?status=${filter}`);
+      const data = await res.json();
+      setTasks(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, [filter]);
+
+  const toggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "done" ? "todo" : "done";
+    try {
+      await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+        headers: { "Content-Type": "application/json" },
+      });
+      fetchTasks();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    if (!confirm("Hapus tugas ini?")) return;
+    try {
+      await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      fetchTasks();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const filteredTasks = tasks.filter(task => 
+    task.title.toLowerCase().includes(search.toLowerCase()) ||
+    task.course.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-8">
@@ -35,10 +83,10 @@ export default function TasksPage() {
           <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Daftar Tugas</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Kelola semua tugas kuliahmu di sini.</p>
         </div>
-        <button className="flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl transition-all shadow-lg shadow-primary-200 dark:shadow-none font-bold">
+        <Link href="/tasks/create" className="flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl transition-all shadow-lg shadow-primary-200 dark:shadow-none font-bold">
           <Plus size={20} className="mr-2" />
           Tambah Tugas
-        </button>
+        </Link>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -65,58 +113,77 @@ export default function TasksPage() {
             <input 
               type="text" 
               placeholder="Cari tugas..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
             />
           </div>
-          <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <Filter size={20} className="text-slate-500" />
-          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {mockTasks.map((task, index) => (
-          <motion.div
-            key={task.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="group glass p-5 rounded-2xl flex items-center justify-between card-hover border-l-4 border-transparent hover:border-primary-500"
-          >
-            <div className="flex items-start space-x-4">
-              <button className="mt-1 text-slate-300 hover:text-emerald-500 transition-colors">
-                {task.status === "done" ? <CheckCircle2 className="text-emerald-500" size={24} /> : <Circle size={24} />}
-              </button>
-              <div>
-                <h4 className={cn(
-                  "font-bold text-lg transition-all",
-                  task.status === "done" ? "text-slate-400 line-through" : "text-slate-800 dark:text-white"
-                )}>
-                  {task.title}
-                </h4>
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-4 mt-2">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center">
-                    <span className="w-2 h-2 bg-primary-400 rounded-full mr-2"></span>
-                    {task.course}
-                  </span>
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center">
-                    <CalendarIcon size={14} className="mr-1" />
-                    {formatDate(task.deadline)}
-                  </span>
-                  <span className={cn("px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider", priorityColors[task.priority])}>
-                    {task.priority}
-                  </span>
+        {loading ? (
+          <p className="text-center py-10 text-slate-400">Memuat tugas...</p>
+        ) : filteredTasks.length === 0 ? (
+          <div className="text-center py-20 glass rounded-3xl">
+            <p className="text-slate-500">Tidak ada tugas ditemukan.</p>
+          </div>
+        ) : (
+          filteredTasks.map((task, index) => (
+            <motion.div
+              key={task.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="group glass p-5 rounded-2xl flex items-center justify-between card-hover border-l-4 border-transparent hover:border-primary-500"
+            >
+              <div className="flex items-start space-x-4">
+                <button 
+                  onClick={() => toggleStatus(task.id, task.status)}
+                  className="mt-1 text-slate-300 hover:text-emerald-500 transition-colors"
+                >
+                  {task.status === "done" ? <CheckCircle2 className="text-emerald-500" size={24} /> : <Circle size={24} />}
+                </button>
+                <div>
+                  <h4 className={cn(
+                    "font-bold text-lg transition-all",
+                    task.status === "done" ? "text-slate-400 line-through" : "text-slate-800 dark:text-white"
+                  )}>
+                    {task.title}
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-y-2 gap-x-4 mt-2">
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center">
+                      <span className="w-2 h-2 bg-primary-400 rounded-full mr-2"></span>
+                      {task.course.name}
+                    </span>
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center">
+                      <CalendarIcon size={14} className="mr-1" />
+                      {formatDate(task.deadline)}
+                    </span>
+                    <span className={cn("px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider", priorityColors[task.priority])}>
+                      {task.priority}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                <MoreVertical size={20} className="text-slate-400" />
-              </button>
-            </div>
-          </motion.div>
-        ))}
+              
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => router.push(`/tasks/${task.id}/edit`)}
+                  className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-500"
+                >
+                  <Edit2 size={18} />
+                </button>
+                <button 
+                  onClick={() => deleteTask(task.id)}
+                  className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
