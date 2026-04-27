@@ -27,7 +27,14 @@ export default function DashboardPage() {
 
     fetch("/api/tasks?status=todo")
       .then(res => res.json())
-      .then(data => setRecentTasks(data.slice(0, 3)));
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRecentTasks(data.slice(0, 3));
+        } else {
+          setRecentTasks([]);
+        }
+      })
+      .catch(() => setRecentTasks([]));
   }, []);
 
   const stats = [
