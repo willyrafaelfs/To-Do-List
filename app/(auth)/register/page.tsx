@@ -40,90 +40,113 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0f172a] p-6">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md glass p-8 rounded-3xl shadow-2xl relative overflow-hidden"
-      >
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center relative p-6">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/login-bg.png')" }}
+      />
+      {/* Dark overlay for better contrast */}
+      <div className="absolute inset-0 z-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm" />
 
-        <div className="relative z-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/20 dark:border-white/10 p-8 rounded-[2rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+          {/* Icon container */}
           <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-200 dark:shadow-none">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shadow-inner border border-white/30 backdrop-blur-md">
               <UserPlus className="text-white" size={32} />
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold text-center text-slate-800 dark:text-white mb-2">Daftar Akun</h2>
-          <p className="text-center text-slate-500 dark:text-slate-400 mb-8">Mulai kelola tugas kuliahmu sekarang</p>
+          <h2 className="text-3xl font-extrabold text-center text-white mb-2 tracking-tight drop-shadow-sm">
+            Daftar Akun
+          </h2>
+          <p className="text-center text-white/70 mb-8 font-medium">
+            Mulai kelola tugas kuliahmu sekarang
+          </p>
 
+          {/* Error notification */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm mb-6 font-medium border border-red-100 dark:border-red-900/30">
+            <div className="bg-red-500/20 backdrop-blur-md text-red-100 p-3 rounded-xl text-sm mb-6 font-medium border border-red-500/30 text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Nama Lengkap */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Nama Lengkap</label>
+              <label className="text-sm font-semibold text-white/90 ml-1 drop-shadow-sm">
+                Nama Lengkap
+              </label>
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                 <input 
                   type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nama Anda"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none"
+                  className="w-full pl-11 pr-4 py-3.5 bg-white/10 dark:bg-black/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 transition-all border border-white/10 text-white placeholder:text-white/40"
                 />
               </div>
             </div>
 
+            {/* Email */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email</label>
+              <label className="text-sm font-semibold text-white/90 ml-1 drop-shadow-sm">
+                Email
+              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none"
+                  className="w-full pl-11 pr-4 py-3.5 bg-white/10 dark:bg-black/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 transition-all border border-white/10 text-white placeholder:text-white/40"
                 />
               </div>
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Password</label>
+              <label className="text-sm font-semibold text-white/90 ml-1 drop-shadow-sm">
+                Password
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none"
+                  className="w-full pl-11 pr-4 py-3.5 bg-white/10 dark:bg-black/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 transition-all border border-white/10 text-white placeholder:text-white/40"
                 />
               </div>
             </div>
 
+            {/* Tombol Daftar */}
             <button 
               disabled={loading}
-              className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary-200 dark:shadow-none flex items-center justify-center group mt-4 disabled:opacity-50"
+              className="w-full py-4 mt-2 bg-white/20 hover:bg-white/30 text-white font-bold rounded-2xl transition-all border border-white/30 backdrop-blur-md shadow-[0_4px_12px_rgba(255,255,255,0.1)] flex items-center justify-center group disabled:opacity-50"
             >
               {loading ? "Mendaftar..." : "Daftar Sekarang"}
               {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />}
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+          {/* Link ke halaman login */}
+          <div className="mt-8 pt-6 border-t border-white/10 text-center">
+            <p className="text-white/70 text-sm font-medium">
               Sudah punya akun?{" "}
-              <Link href="/login" className="text-primary-600 font-bold hover:underline">
+              <Link href="/login" className="text-white font-bold hover:text-white/80 transition-colors drop-shadow-sm">
                 Masuk di sini
               </Link>
             </p>
