@@ -38,9 +38,14 @@ export default function TasksPage() {
     try {
       const res = await fetch(`/api/tasks?status=${filter}&priority=${priorityFilter}&courseId=${courseFilter}`);
       const data = await res.json();
-      setTasks(data);
+      if (Array.isArray(data)) {
+        setTasks(data);
+      } else {
+        setTasks([]);
+      }
     } catch (err) {
       console.error(err);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -49,7 +54,9 @@ export default function TasksPage() {
   useEffect(() => {
     fetch("/api/courses")
       .then(res => res.json())
-      .then(data => setCourses(data));
+      .then(data => {
+        if (Array.isArray(data)) setCourses(data);
+      });
   }, []);
 
   useEffect(() => {
@@ -80,10 +87,12 @@ export default function TasksPage() {
     }
   };
 
-  const filteredTasks = tasks.filter(task => 
-    task.title.toLowerCase().includes(search.toLowerCase()) ||
-    task.course.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTasks = Array.isArray(tasks) 
+    ? tasks.filter(task => 
+        task.title.toLowerCase().includes(search.toLowerCase()) ||
+        task.course?.name?.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="space-y-8">
