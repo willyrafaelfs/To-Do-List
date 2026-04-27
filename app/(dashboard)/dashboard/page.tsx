@@ -16,12 +16,16 @@ import { useSession } from "next-auth/react";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import MiniCalendar from "@/components/MiniCalendar";
+import DayPlanCard from "@/components/DayPlanCard";
+import { BookOpenCheck } from "lucide-react";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [statsData, setStatsData] = useState<any>(null);
   const [recentTasks, setRecentTasks] = useState<any[]>([]);
   const [aiData, setAiData] = useState<any>(null);
+  const [todayPlan, setTodayPlan] = useState<any>(null);
+  const [studyPrefs, setStudyPrefs] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/stats")
@@ -42,6 +46,16 @@ export default function DashboardPage() {
     fetch("/api/ai/prioritize")
       .then(res => res.json())
       .then(data => setAiData(data))
+      .catch(console.error);
+
+    fetch("/api/planner/generate?days=3")
+      .then(res => res.json())
+      .then(data => {
+        if (data.plan) {
+          setTodayPlan(data.plan.days?.[0] ?? null);
+          setStudyPrefs(data.preferences);
+        }
+      })
       .catch(console.error);
   }, []);
 
@@ -205,6 +219,34 @@ export default function DashboardPage() {
               <MiniCalendar />
             </div>
           </div>
+        </div>
+
+        {/* Today Study Plan Widget */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
+              <BookOpenCheck size={20} className="mr-2 text-emerald-500" /> Jadwal Belajar Hari Ini
+            </h3>
+            <Link href="/planner" className="text-emerald-500 hover:text-emerald-600 text-sm font-bold flex items-center">
+              Lihat Semua <ArrowRight size={16} className="ml-1" />
+            </Link>
+          </div>
+          {!todayPlan ? (
+            <div className="glass rounded-2xl p-8 text-center text-slate-400 font-medium">
+              Planner sedang memuat...
+            </div>
+          ) : todayPlan.sessions?.length === 0 ? (
+            <div className="glass rounded-2xl p-8 text-center text-slate-400 font-medium">
+              Tidak ada sesi belajar terjadwal hari ini 🎉
+            </div>
+          ) : (
+            <DayPlanCard
+              dayPlan={todayPlan}
+              maxHours={studyPrefs?.studyHoursPerDay ?? 4}
+              index={0}
+              compact={true}
+            />
+          )}
         </div>
       </div>
     </div>

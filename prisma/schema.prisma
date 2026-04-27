@@ -8,13 +8,26 @@ datasource db {
 }
 
 model User {
+  id                  String      @id @default(cuid())
+  name                String?
+  email               String      @unique
+  password            String
+  studyHoursPerDay    Float?      @default(4)
+  preferredStudyTime  String?     @default("morning")
+  createdAt           DateTime    @default(now())
+  courses             Course[]
+  tasks               Task[]
+  studyPlans          StudyPlan[]
+}
+
+model StudyPlan {
   id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String
+  userId    String
+  date      DateTime
+  planData  Json
   createdAt DateTime @default(now())
-  courses   Course[]
-  tasks     Task[]
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Course {

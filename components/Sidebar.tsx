@@ -11,7 +11,8 @@ import {
   LogOut,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BookOpenCheck
 } from "lucide-react";
 import { useStore } from "@/hooks/useStore";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const menuItems = [
   { label: "Tugas", href: "/tasks", icon: CheckSquare },
   { label: "Mata Kuliah", href: "/courses", icon: BookOpen },
   { label: "Kalender", href: "/calendar", icon: Calendar },
+  { label: "Study Planner", href: "/planner", icon: BookOpenCheck },
   { label: "AI Planner", href: "/ai-planner", icon: Sparkles },
 ];
 
