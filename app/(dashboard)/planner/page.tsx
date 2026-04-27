@@ -216,7 +216,7 @@ export default function PlannerPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {planData.days.map((day: any, i: number) => (
+                {planData?.days?.map((day: any, i: number) => (
                   <DayPlanCard
                     key={day.date}
                     dayPlan={day}
