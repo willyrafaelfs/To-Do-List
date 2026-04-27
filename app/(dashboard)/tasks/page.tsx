@@ -137,16 +137,16 @@ export default function TasksPage() {
               transition={{ delay: index * 0.05 }}
               className="group glass p-5 rounded-2xl flex items-center justify-between card-hover border-l-4 border-transparent hover:border-primary-500"
             >
-              <div className="flex items-start space-x-4">
+              <div className="flex items-start space-x-4 flex-1">
                 <button 
                   onClick={() => toggleStatus(task.id, task.status)}
-                  className="mt-1 text-slate-300 hover:text-emerald-500 transition-colors"
+                  className="mt-1 text-slate-300 hover:text-emerald-500 transition-colors shrink-0"
                 >
                   {task.status === "done" ? <CheckCircle2 className="text-emerald-500" size={24} /> : <Circle size={24} />}
                 </button>
-                <div>
+                <Link href={`/tasks/${task.id}`} className="flex-1 min-w-0 group/text">
                   <h4 className={cn(
-                    "font-bold text-lg transition-all",
+                    "font-bold text-lg transition-all group-hover/text:text-primary-600 truncate",
                     task.status === "done" ? "text-slate-400 line-through" : "text-slate-800 dark:text-white"
                   )}>
                     {task.title}
@@ -164,16 +164,16 @@ export default function TasksPage() {
                       {task.priority}
                     </span>
                   </div>
-                </div>
+                </Link>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => router.push(`/tasks/${task.id}/edit`)}
+              <div className="flex items-center space-x-1 ml-4">
+                <Link 
+                  href={`/tasks/${task.id}/edit`}
                   className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-primary-500"
                 >
                   <Edit2 size={18} />
-                </button>
+                </Link>
                 <button 
                   onClick={() => deleteTask(task.id)}
                   className="p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500"
