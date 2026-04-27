@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   BookOpen, 
@@ -10,14 +11,19 @@ import {
   MoreHorizontal
 } from "lucide-react";
 
-const mockCourses = [
-  { id: "1", name: "Pemrograman Web", lecturer: "Budi Santoso, M.T.", semester: 4, taskCount: 5 },
-  { id: "2", name: "Jaringan Komputer", lecturer: "Siti Aminah, Ph.D.", semester: 4, taskCount: 3 },
-  { id: "3", name: "Etika Profesi", lecturer: "Dr. Ahmad Yani", semester: 4, taskCount: 2 },
-  { id: "4", name: "Sistem Basis Data", lecturer: "Eko Prasetyo, M.Kom.", semester: 4, taskCount: 4 },
-];
-
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => {
+        setCourses(data);
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -31,51 +37,55 @@ export default function CoursesPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockCourses.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
-            className="group glass p-6 rounded-3xl card-hover relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
-                <MoreHorizontal size={20} className="text-slate-400" />
-              </button>
-            </div>
-
-            <div className="w-14 h-14 bg-primary-500/10 text-primary-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <BookOpen size={28} />
-            </div>
-
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 leading-tight">
-              {course.name}
-            </h3>
-            
-            <div className="space-y-3 mt-4">
-              <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                <Users size={16} className="mr-2 shrink-0" />
-                <span className="truncate">{course.lecturer}</span>
+      {loading ? (
+        <p className="text-center py-20 text-slate-400">Memuat mata kuliah...</p>
+      ) : courses.length === 0 ? (
+        <div className="text-center py-20 glass rounded-3xl">
+          <p className="text-slate-500">Belum ada mata kuliah. Silakan tambahkan matkul baru!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course, index) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="glass p-6 rounded-3xl card-hover flex flex-col justify-between"
+            >
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center">
+                    <BookOpen size={24} />
+                  </div>
+                  <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <MoreHorizontal size={20} />
+                  </button>
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
+                    {course.name}
+                  </h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center">
+                    <Users size={14} className="mr-1" /> {course.lecturer || "Dosen Belum Diatur"}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                <GraduationCap size={16} className="mr-2 shrink-0" />
-                <span>Semester {course.semester}</span>
-              </div>
-            </div>
 
-            <div className="mt-8 flex items-center justify-between">
-              <div className="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300">
-                {course.taskCount} Tugas Aktif
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <GraduationCap size={14} className="mr-1" /> Sem {course.semester}
+                  </div>
+                </div>
+                <button className="flex items-center text-primary-600 dark:text-primary-400 text-sm font-bold hover:underline">
+                  Detail <ArrowUpRight size={16} className="ml-1" />
+                </button>
               </div>
-              <button className="p-2 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-colors">
-                <ArrowUpRight size={20} />
-              </button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

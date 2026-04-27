@@ -5,18 +5,35 @@ import { Plus, ArrowLeft, Calendar as CalendarIcon, Flag, Tag, FileText } from "
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const taskSchema = z.object({
+  title: z.string().min(3, "Judul minimal 3 karakter"),
+  description: z.string().optional(),
+  deadline: z.string().min(1, "Tenggat waktu wajib diisi"),
+  priority: z.enum(["low", "medium", "high"]),
+  courseId: z.string().min(1, "Pilih mata kuliah"),
+});
+
+type TaskFormValues = z.infer<typeof taskSchema>;
 
 export default function CreateTaskPage() {
   const [courses, setCourses] = useState<any[]>([]);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    deadline: "",
-    priority: "low",
-    courseId: "",
-  });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      priority: "low",
+    },
+  });
 
   useEffect(() => {
     fetch("/api/courses")
@@ -24,19 +41,18 @@ export default function CreateTaskPage() {
       .then(data => setCourses(data));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: TaskFormValues) => {
     setLoading(true);
-
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
       });
 
       if (res.ok) {
         router.push("/tasks");
+        router.refresh();
       }
     } catch (err) {
       console.error(err);
@@ -60,7 +76,7 @@ export default function CreateTaskPage() {
       <motion.form 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="glass p-8 rounded-3xl space-y-6"
       >
         <div className="space-y-2">
@@ -68,22 +84,19 @@ export default function CreateTaskPage() {
           <div className="relative">
             <Tag className="absolute left-3 top-3.5 text-slate-400" size={18} />
             <input 
+              {...register("title")}
               type="text" 
               placeholder="Contoh: Laporan Praktikum Jaringan"
-              required
-              value={formData.title}
-              onChange={e => setFormData({...formData, title: e.target.value})}
               className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none"
             />
           </div>
+          {errors.title && <p className="text-red-500 text-xs mt-1 ml-1">{errors.title.message}</p>}
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Mata Kuliah</label>
           <select 
-            required
-            value={formData.courseId}
-            onChange={e => setFormData({...formData, courseId: e.target.value})}
+            {...register("courseId")}
             className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none appearance-none"
           >
             <option value="">Pilih Mata Kuliah</option>
@@ -91,6 +104,7 @@ export default function CreateTaskPage() {
               <option key={course.id} value={course.id}>{course.name}</option>
             ))}
           </select>
+          {errors.courseId && <p className="text-red-500 text-xs mt-1 ml-1">{errors.courseId.message}</p>}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -99,12 +113,12 @@ export default function CreateTaskPage() {
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-3.5 text-slate-400" size={18} />
               <input 
+                {...register("deadline")}
                 type="datetime-local" 
-                value={formData.deadline}
-                onChange={e => setFormData({...formData, deadline: e.target.value})}
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none"
               />
             </div>
+            {errors.deadline && <p className="text-red-500 text-xs mt-1 ml-1">{errors.deadline.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -112,8 +126,7 @@ export default function CreateTaskPage() {
             <div className="relative">
               <Flag className="absolute left-3 top-3.5 text-slate-400" size={18} />
               <select 
-                value={formData.priority}
-                onChange={e => setFormData({...formData, priority: e.target.value})}
+                {...register("priority")}
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none appearance-none"
               >
                 <option value="low">Rendah</option>
@@ -129,10 +142,9 @@ export default function CreateTaskPage() {
           <div className="relative">
             <FileText className="absolute left-3 top-3.5 text-slate-400" size={18} />
             <textarea 
+              {...register("description")}
               rows={4}
               placeholder="Tambahkan detail atau instruksi tugas..."
-              value={formData.description}
-              onChange={e => setFormData({...formData, description: e.target.value})}
               className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none resize-none"
             ></textarea>
           </div>

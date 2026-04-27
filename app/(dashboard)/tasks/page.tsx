@@ -25,7 +25,10 @@ const priorityColors: any = {
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [filter, setFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [courseFilter, setCourseFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -33,7 +36,7 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/tasks?status=${filter}`);
+      const res = await fetch(`/api/tasks?status=${filter}&priority=${priorityFilter}&courseId=${courseFilter}`);
       const data = await res.json();
       setTasks(data);
     } catch (err) {
@@ -44,8 +47,14 @@ export default function TasksPage() {
   };
 
   useEffect(() => {
+    fetch("/api/courses")
+      .then(res => res.json())
+      .then(data => setCourses(data));
+  }, []);
+
+  useEffect(() => {
     fetchTasks();
-  }, [filter]);
+  }, [filter, priorityFilter, courseFilter]);
 
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "done" ? "todo" : "done";
@@ -107,7 +116,7 @@ export default function TasksPage() {
           ))}
         </div>
 
-        <div className="flex items-center space-x-2 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
@@ -115,9 +124,31 @@ export default function TasksPage() {
               placeholder="Cari tugas..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
             />
           </div>
+
+          <select 
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium transition-all shadow-sm"
+          >
+            <option value="all">Semua Prioritas</option>
+            <option value="high">Tinggi</option>
+            <option value="medium">Sedang</option>
+            <option value="low">Rendah</option>
+          </select>
+
+          <select 
+            value={courseFilter}
+            onChange={(e) => setCourseFilter(e.target.value)}
+            className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium transition-all shadow-sm"
+          >
+            <option value="all">Semua Matkul</option>
+            {courses.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 

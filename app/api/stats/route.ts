@@ -10,12 +10,14 @@ export async function GET() {
   const userId = (session.user as any).id;
 
   try {
-    const [totalTasks, completedTasks, pendingTasks, upcomingDeadline] = await Promise.all([
-      prisma.task.count({ where: { course: { userId } } }),
-      prisma.task.count({ where: { course: { userId }, status: "done" } }),
-      prisma.task.count({ where: { course: { userId }, status: { not: "done" } } }),
+    const now = new Date();
+    const [totalTasks, completedTasks, pendingTasks, overdueTasks, upcomingDeadline] = await Promise.all([
+      prisma.task.count({ where: { userId } }),
+      prisma.task.count({ where: { userId, status: "done" } }),
+      prisma.task.count({ where: { userId, status: { not: "done" } } }),
+      prisma.task.count({ where: { userId, status: { not: "done" }, deadline: { lt: now } } }),
       prisma.task.findFirst({
-        where: { course: { userId }, status: { not: "done" }, deadline: { gte: new Date() } },
+        where: { userId, status: { not: "done" }, deadline: { gte: now } },
         orderBy: { deadline: "asc" },
         include: { course: true }
       }),
@@ -25,6 +27,7 @@ export async function GET() {
       totalTasks,
       completedTasks,
       pendingTasks,
+      overdueTasks,
       upcomingDeadline
     });
   } catch (error) {

@@ -14,14 +14,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const priority = searchParams.get("priority");
+    const courseId = searchParams.get("courseId");
 
     const tasks = await prisma.task.findMany({
       where: {
-        course: {
-          userId: (session.user as any).id,
-        },
+        userId: (session.user as any).id,
         ...(status && status !== "all" ? { status } : {}),
         ...(priority && priority !== "all" ? { priority } : {}),
+        ...(courseId && courseId !== "all" ? { courseId } : {}),
       },
       include: {
         course: true,
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
         deadline: deadline ? new Date(deadline) : null,
         priority,
         courseId,
+        userId: (session.user as any).id,
       },
     });
 

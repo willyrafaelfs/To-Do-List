@@ -34,7 +34,7 @@ export default function DashboardPage() {
     { label: "Total Tugas", value: statsData?.totalTasks || 0, icon: TrendingUp, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-900/20" },
     { label: "Tugas Selesai", value: statsData?.completedTasks || 0, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
     { label: "Pending", value: statsData?.pendingTasks || 0, icon: Clock, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-    { label: "Mendekati Deadline", value: statsData?.upcomingDeadline ? 1 : 0, icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
+    { label: "Terlambat (Overdue)", value: statsData?.overdueTasks || 0, icon: AlertCircle, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
   ];
 
   return (

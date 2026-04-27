@@ -31,7 +31,7 @@ export default function LandingPage() {
               <Zap className="text-white" size={20} />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
-              ManajenTugas
+              Manajemen Tugas Kuliah
             </span>
           </div>
 
