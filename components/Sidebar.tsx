@@ -12,7 +12,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  BookOpenCheck
+  BookOpenCheck,
+  BarChart2
 } from "lucide-react";
 import { useStore } from "@/hooks/useStore";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const menuItems = [
   { label: "Kalender", href: "/calendar", icon: Calendar },
   { label: "Study Planner", href: "/planner", icon: BookOpenCheck },
   { label: "AI Planner", href: "/ai-planner", icon: Sparkles },
+  { label: "Analytics", href: "/analytics", icon: BarChart2 },
 ];
 
 export function Sidebar() {
