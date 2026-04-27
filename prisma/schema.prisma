@@ -23,6 +23,7 @@ model Course {
   name      String
   lecturer  String?
   semester  Int?
+  color     String?  @default("#6366f1")
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks     Task[]

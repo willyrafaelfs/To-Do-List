@@ -192,8 +192,8 @@ export default function TasksPage() {
                     {task.title}
                   </h4>
                   <div className="flex flex-wrap items-center gap-y-2 gap-x-4 mt-2">
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center">
-                      <span className="w-2 h-2 bg-primary-400 rounded-full mr-2"></span>
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                      <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: task.course.color || "#6366f1" }}></span>
                       {task.course.name}
                     </span>
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center">

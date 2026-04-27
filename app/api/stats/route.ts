@@ -11,7 +11,7 @@ export async function GET() {
 
   try {
     const now = new Date();
-    const [totalTasks, completedTasks, pendingTasks, overdueTasks, upcomingDeadline] = await Promise.all([
+    const [totalTasks, completedTasks, pendingTasks, overdueTasks, upcomingDeadline, courses] = await Promise.all([
       prisma.task.count({ where: { userId } }),
       prisma.task.count({ where: { userId, status: "done" } }),
       prisma.task.count({ where: { userId, status: { not: "done" } } }),
@@ -21,6 +21,14 @@ export async function GET() {
         orderBy: { deadline: "asc" },
         include: { course: true }
       }),
+      prisma.course.findMany({
+        where: { userId },
+        include: {
+          _count: {
+            select: { tasks: { where: { status: { not: "done" } } } }
+          }
+        }
+      })
     ]);
 
     return NextResponse.json({
@@ -28,7 +36,13 @@ export async function GET() {
       completedTasks,
       pendingTasks,
       overdueTasks,
-      upcomingDeadline
+      upcomingDeadline,
+      tasksPerCourse: courses.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color,
+        count: c._count.tasks
+      }))
     });
   } catch (error) {
     return NextResponse.json({ message: "Error fetching stats" }, { status: 500 });
