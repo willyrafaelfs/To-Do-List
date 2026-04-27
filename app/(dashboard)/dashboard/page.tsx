@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const [statsData, setStatsData] = useState<any>(null);
   const [recentTasks, setRecentTasks] = useState<any[]>([]);
+  const [aiData, setAiData] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/stats")
@@ -37,6 +38,11 @@ export default function DashboardPage() {
         }
       })
       .catch(() => setRecentTasks([]));
+
+    fetch("/api/ai/prioritize")
+      .then(res => res.json())
+      .then(data => setAiData(data))
+      .catch(console.error);
   }, []);
 
   const stats = [
@@ -126,20 +132,36 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI Recommendations */}
+        {/* AI Recommendations - Real Data */}
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
             <Sparkles className="mr-2 text-primary-500" size={24} />
-            AI Insight
+            AI Priority
           </h3>
-          <div className="p-6 bg-gradient-to-br from-primary-600 to-primary-400 text-white rounded-3xl shadow-xl shadow-primary-200 dark:shadow-none">
-            <p className="font-medium text-primary-50">Rekomendasi hari ini:</p>
-            <p className="mt-4 text-lg font-bold">
-              "Fokus pada Laporan Praktikum Jaringan. Deadline tinggal 24 jam dan memiliki bobot nilai tinggi."
-            </p>
-            <button className="mt-6 w-full py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl font-bold transition-all text-sm">
-              Buat Jadwal Belajar
-            </button>
+          <div className="p-6 bg-gradient-to-br from-primary-600 to-purple-600 text-white rounded-3xl shadow-xl shadow-primary-200 dark:shadow-none space-y-4">
+            {!aiData ? (
+              <p className="text-primary-100 text-sm animate-pulse">AI sedang menganalisis...</p>
+            ) : aiData?.ranked?.length === 0 ? (
+              <p className="font-bold text-lg">Semua tugas sudah selesai! 🎉</p>
+            ) : (
+              <>
+                <div>
+                  <p className="text-xs font-bold text-primary-200 uppercase tracking-widest">Prioritas Utama Hari Ini</p>
+                  <p className="text-xl font-black mt-1">{aiData.ranked[0].title}</p>
+                  <p className="text-sm text-primary-100 mt-1">{aiData.ranked[0].recommendation}</p>
+                </div>
+                <div className="flex items-center justify-between bg-white/10 rounded-xl px-4 py-2">
+                  <span className="text-sm font-bold">AI Score</span>
+                  <span className="text-2xl font-black">{aiData.ranked[0].aiScore}/100</span>
+                </div>
+                {aiData.summary?.critical > 0 && (
+                  <p className="text-xs text-red-200 font-bold">⚠️ {aiData.summary.critical} tugas dalam status KRITIS!</p>
+                )}
+              </>
+            )}
+            <Link href="/ai-planner" className="block w-full py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl font-bold transition-all text-sm text-center">
+              Lihat Analisis Lengkap →
+            </Link>
           </div>
         </div>
 
