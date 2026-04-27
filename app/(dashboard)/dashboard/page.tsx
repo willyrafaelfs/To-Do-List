@@ -7,13 +7,15 @@ import {
   AlertCircle, 
   TrendingUp,
   Plus,
-  ArrowRight
+  ArrowRight,
+  CalendarDays
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import MiniCalendar from "@/components/MiniCalendar";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -141,30 +143,45 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Course Analytics */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">Analitik Matkul</h3>
-          <div className="glass p-6 rounded-3xl space-y-6">
-            {statsData?.tasksPerCourse?.length === 0 ? (
-              <p className="text-slate-500 text-sm text-center py-4">Belum ada data matkul.</p>
-            ) : (
-              statsData?.tasksPerCourse?.map((course: any) => (
-                <div key={course.id} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-bold text-slate-700 dark:text-slate-300">{course.name}</span>
-                    <span className="font-black text-primary-600">{course.count} Tugas</span>
+        {/* Layout for Course Analytics and Mini Calendar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Course Analytics */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
+              <TrendingUp size={20} className="mr-2 text-primary-500" /> Analitik Matkul
+            </h3>
+            <div className="glass p-6 rounded-3xl space-y-6 min-h-[350px]">
+              {statsData?.tasksPerCourse?.length === 0 ? (
+                <p className="text-slate-500 text-sm text-center py-4">Belum ada data matkul.</p>
+              ) : (
+                statsData?.tasksPerCourse?.map((course: any) => (
+                  <div key={course.id} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{course.name}</span>
+                      <span className="font-black text-primary-600">{course.count} Tugas</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min((course.count / (statsData.pendingTasks || 1)) * 100, 100)}%` }}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: course.color || "#6366f1" }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((course.count / (statsData.pendingTasks || 1)) * 100, 100)}%` }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: course.color || "#6366f1" }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Mini Calendar Widget */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center">
+              <CalendarDays size={20} className="mr-2 text-primary-500" /> Kalender Mini
+            </h3>
+            <div className="glass p-6 rounded-3xl min-h-[350px]">
+              <MiniCalendar />
+            </div>
           </div>
         </div>
       </div>

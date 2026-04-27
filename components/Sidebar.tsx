@@ -18,11 +18,11 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: CheckSquare, label: "Tugas", href: "/tasks" },
-  { icon: BookOpen, label: "Mata Kuliah", href: "/courses" },
-  { icon: Calendar, label: "Kalender", href: "/calendar" },
-  { icon: Sparkles, label: "AI Planner", href: "/ai-planner" },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Tugas", href: "/tasks", icon: CheckSquare },
+  { label: "Mata Kuliah", href: "/courses", icon: BookOpen },
+  { label: "Kalender", href: "/calendar", icon: Calendar },
+  { label: "AI Planner", href: "/ai-planner", icon: Sparkles },
 ];
 
 export function Sidebar() {

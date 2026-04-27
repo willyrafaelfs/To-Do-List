@@ -77,7 +77,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(task, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[API_TASKS_POST_ERROR]", error);
+    return NextResponse.json({ 
+      message: "Gagal menyimpan tugas", 
+      error: error.message 
+    }, { status: 500 });
   }
 }

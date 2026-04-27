@@ -57,9 +57,13 @@ export default function CreateTaskPage() {
       if (res.ok) {
         router.push("/tasks");
         router.refresh();
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message || "Gagal menyimpan tugas"}`);
       }
     } catch (err) {
       console.error(err);
+      alert("Terjadi kesalahan koneksi.");
     } finally {
       setLoading(false);
     }
