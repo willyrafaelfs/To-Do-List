@@ -11,13 +11,19 @@ export async function GET() {
 
   try {
     const now = new Date();
-    const [totalTasks, completedTasks, pendingTasks, overdueTasks, upcomingDeadline, courses] = await Promise.all([
+    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(now.setHours(23, 59, 59, 999));
+    const realNow = new Date();
+
+    const [totalTasks, completedTasks, pendingTasks, overdueTasks, dueTodayTasks, urgentTasks, upcomingDeadline, courses] = await Promise.all([
       prisma.task.count({ where: { userId } }),
       prisma.task.count({ where: { userId, status: "done" } }),
       prisma.task.count({ where: { userId, status: { not: "done" } } }),
-      prisma.task.count({ where: { userId, status: { not: "done" }, deadline: { lt: now } } }),
+      prisma.task.count({ where: { userId, status: { not: "done" }, deadline: { lt: startOfToday } } }),
+      prisma.task.count({ where: { userId, status: { not: "done" }, deadline: { gte: startOfToday, lte: endOfToday } } }),
+      prisma.task.count({ where: { userId, status: { not: "done" }, priority: "high" } }),
       prisma.task.findFirst({
-        where: { userId, status: { not: "done" }, deadline: { gte: now } },
+        where: { userId, status: { not: "done" }, deadline: { gte: realNow } },
         orderBy: { deadline: "asc" },
         include: { course: true }
       }),
@@ -36,6 +42,8 @@ export async function GET() {
       completedTasks,
       pendingTasks,
       overdueTasks,
+      dueTodayTasks,
+      urgentTasks,
       upcomingDeadline,
       tasksPerCourse: courses.map(c => ({
         id: c.id,

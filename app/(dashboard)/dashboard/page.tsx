@@ -40,38 +40,49 @@ export default function DashboardPage() {
   const stats = [
     { label: "Total Tugas", value: statsData?.totalTasks || 0, icon: TrendingUp, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-900/20" },
     { label: "Tugas Selesai", value: statsData?.completedTasks || 0, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-    { label: "Pending", value: statsData?.pendingTasks || 0, icon: Clock, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-    { label: "Terlambat (Overdue)", value: statsData?.overdueTasks || 0, icon: AlertCircle, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
+    { label: "Tenggat Hari Ini", value: statsData?.dueTodayTasks || 0, icon: Clock, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
+    { label: "Mendesak (High)", value: statsData?.urgentTasks || 0, icon: AlertCircle, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" },
   ];
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Selamat Datang, {session?.user?.name || "Mahasiswa"}! 👋</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Ini ringkasan tugas kuliahmu hari ini.</p>
-        </div>
-        <Link href="/tasks/create" className="flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-all shadow-lg shadow-primary-200 dark:shadow-none font-bold">
-          <Plus size={20} className="mr-2" />
-          Tugas Baru
-        </Link>
+      <div>
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
+          Halo, {session?.user?.name?.split(" ")[0] || "Student"}! 👋
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Ini ringkasan tugas-tugas kuliahmu hari ini.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {(statsData?.overdueTasks || 0) > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-red-500/20"
+        >
+          <div className="flex items-center space-x-3">
+            <AlertCircle size={24} />
+            <span className="font-bold">Perhatian! Ada {statsData?.overdueTasks} tugas yang sudah lewat tenggat waktu.</span>
+          </div>
+          <Link href="/tasks?status=todo" className="px-4 py-2 bg-white text-red-500 font-bold rounded-xl text-sm hover:bg-red-50 transition-colors">
+            Cek Sekarang
+          </Link>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, index) => (
           <motion.div
-            key={stat.label}
+            key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="p-6 glass rounded-2xl card-hover"
+            className="glass p-6 rounded-3xl"
           >
-            <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
+            <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-4`}>
               <stat.icon size={24} />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{stat.label}</p>
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-1">{stat.value}</h3>
+            <h3 className="text-3xl font-black text-slate-800 dark:text-white mb-1">{stat.value}</h3>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{stat.label}</p>
           </motion.div>
         ))}
       </div>

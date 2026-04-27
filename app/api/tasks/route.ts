@@ -45,18 +45,36 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { title, description, deadline, priority, courseId } = await req.json();
+    const { title, description, deadline, priority, courseId, reminderMode } = await req.json();
+
+    const taskDeadline = deadline ? new Date(deadline) : null;
 
     const task = await prisma.task.create({
       data: {
         title,
         description,
-        deadline: deadline ? new Date(deadline) : null,
+        deadline: taskDeadline,
         priority,
         courseId,
         userId: (session.user as any).id,
       },
     });
+
+    if (taskDeadline && reminderMode && reminderMode !== "none") {
+      let remindAt = new Date(taskDeadline);
+      if (reminderMode === "1h") {
+        remindAt.setHours(remindAt.getHours() - 1);
+      } else if (reminderMode === "1d") {
+        remindAt.setDate(remindAt.getDate() - 1);
+      }
+
+      await prisma.reminder.create({
+        data: {
+          taskId: task.id,
+          remindAt,
+        }
+      });
+    }
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {

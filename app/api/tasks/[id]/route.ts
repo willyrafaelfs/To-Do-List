@@ -12,13 +12,41 @@ export async function PATCH(
 
   try {
     const body = await req.json();
+    const { reminderMode, ...taskData } = body;
+    const taskDeadline = taskData.deadline ? new Date(taskData.deadline) : null;
+
     const task = await prisma.task.update({
       where: { id: params.id },
       data: {
-        ...body,
-        deadline: body.deadline ? new Date(body.deadline) : undefined,
+        ...taskData,
+        deadline: taskDeadline,
       },
     });
+
+    if (reminderMode !== undefined) {
+      // Clean up existing reminders
+      await prisma.reminder.deleteMany({
+        where: { taskId: params.id }
+      });
+
+      // Create new if requested
+      if (taskDeadline && reminderMode !== "none") {
+        let remindAt = new Date(taskDeadline);
+        if (reminderMode === "1h") {
+          remindAt.setHours(remindAt.getHours() - 1);
+        } else if (reminderMode === "1d") {
+          remindAt.setDate(remindAt.getDate() - 1);
+        }
+
+        await prisma.reminder.create({
+          data: {
+            taskId: task.id,
+            remindAt,
+          }
+        });
+      }
+    }
+
     return NextResponse.json(task);
   } catch (error) {
     return NextResponse.json({ message: "Error updating task" }, { status: 500 });

@@ -15,6 +15,7 @@ const taskSchema = z.object({
   deadline: z.string().min(1, "Tenggat waktu wajib diisi"),
   priority: z.enum(["low", "medium", "high"]),
   courseId: z.string().min(1, "Pilih mata kuliah"),
+  reminderMode: z.enum(["none", "1h", "1d"]),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -32,13 +33,16 @@ export default function CreateTaskPage() {
     resolver: zodResolver(taskSchema),
     defaultValues: {
       priority: "low",
+      reminderMode: "none",
     },
   });
 
   useEffect(() => {
     fetch("/api/courses")
       .then(res => res.json())
-      .then(data => setCourses(data));
+      .then(data => {
+        if (Array.isArray(data)) setCourses(data);
+      });
   }, []);
 
   const onSubmit = async (data: TaskFormValues) => {
@@ -93,18 +97,35 @@ export default function CreateTaskPage() {
           {errors.title && <p className="text-red-500 text-xs mt-1 ml-1">{errors.title.message}</p>}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Mata Kuliah</label>
-          <select 
-            {...register("courseId")}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none appearance-none"
-          >
-            <option value="">Pilih Mata Kuliah</option>
-            {courses.map(course => (
-              <option key={course.id} value={course.id}>{course.name}</option>
-            ))}
-          </select>
-          {errors.courseId && <p className="text-red-500 text-xs mt-1 ml-1">{errors.courseId.message}</p>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Mata Kuliah</label>
+            <select 
+              {...register("courseId")}
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none appearance-none"
+            >
+              <option value="">Pilih Mata Kuliah</option>
+              {courses.map(course => (
+                <option key={course.id} value={course.id}>{course.name}</option>
+              ))}
+            </select>
+            {errors.courseId && <p className="text-red-500 text-xs mt-1 ml-1">{errors.courseId.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Pengingat (Reminder)</label>
+            <div className="relative">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-3.5 text-slate-400"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              <select 
+                {...register("reminderMode")}
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all border-none appearance-none"
+              >
+                <option value="none">Tanpa Pengingat</option>
+                <option value="1h">1 Jam Sebelum Deadline</option>
+                <option value="1d">1 Hari Sebelum Deadline</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
