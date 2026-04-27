@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useStore } from "@/hooks/useStore";
 import { cn } from "@/lib/utils";
+import { signOut } from "next-auth/react";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -78,7 +79,10 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-        <button className="flex items-center w-full p-3 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20">
+        <button 
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="flex items-center w-full p-3 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20"
+        >
           <LogOut className={cn("shrink-0", isSidebarOpen ? "mr-3" : "mx-auto")} size={22} />
           {isSidebarOpen && <span className="font-medium">Keluar</span>}
         </button>
